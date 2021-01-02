@@ -1,8 +1,7 @@
 /*
  * Project MEG
- * Description:
- * Author:
- * Date:
+ * Author: Don Hagen
+ * Date: 02Jan2021
  */
 
 // setup() runs once, when the device is first turned on.
