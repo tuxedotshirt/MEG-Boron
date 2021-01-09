@@ -1,0 +1,17 @@
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;
+_user_part_static_ram_size = 89K;

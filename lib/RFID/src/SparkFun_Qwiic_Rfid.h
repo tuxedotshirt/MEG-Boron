@@ -2,7 +2,7 @@
 #define _SPARKFUN_QWIIC_RFID_H_
 
 #include <Wire.h>
-#include <Arduino.h>
+#include "application.h"
 
 #define DEFAULT_ADDR         0x7D
 #define ALTERNATE_ADDR       0x7C
