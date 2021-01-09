@@ -11,13 +11,14 @@
 
 //#include <Wire.h> //Needed for I2C
 #include <SparkFun_Ublox_Arduino_Library.h>
-#include <SparkFunMMA8452Q.h>
+#include <MMA8452Q.h>
 #include <SparkFun_Qwiic_Rfid.h>
 #include <Particle.h>
 
 //Globals
 void setup();
 void loop();
+void sleep();
 void stolenAlert(bool send);
 void enableRelay(String command);
 void disableRelay(String command);
@@ -35,24 +36,6 @@ int disable(String command);
 void cloudRegistration();
 void printGPS();
 #line 14 "c:/Users/Don/Documents/Particle/projects/MEG-Boron/MEG/src/MEG.ino"
-bool latVarSuccess = false;
-bool lonVarSuccess = false;
-bool alertVarSuccess = false;
-bool isDisabledVarSuccess = false;
-bool armedVarSuccess = false;
-bool disableFunSuccess = false;
-bool armFunSuccess = false;
-bool alertFunSuccess = false;
-bool latStringSuccess = false;
-bool lonStringSuccess = false;
-bool getGPSSuccess = false;
-bool disableSuccess = false;
-bool isDisabledSuccess = false;
-bool armedSuccess = false;
-bool alertSuccess = false;
-bool armedIntSuccess = false;
-bool sendAlertSuccess = false;
-
 bool armed = true;
 int armedInt = 1;
 bool stolen = false;
@@ -170,13 +153,6 @@ void loop()
     {
       Serial.println("Vehicle disabled");
     }
-
-    if (!latVarSuccess || !lonVarSuccess || !alertVarSuccess ||
-        !isDisabledVarSuccess || !armedVarSuccess || !disableFunSuccess ||
-        !armFunSuccess || !alertFunSuccess)
-    {
-      cloudRegistration();
-    }
   }
   if (!on && !stolen)
   {
@@ -205,6 +181,10 @@ void loop()
     previousAwakeTime = millis();
     currentAwakeTime = millis();
   }
+}
+
+void sleep(){
+
 }
 
 void stolenAlert(bool send)
@@ -443,16 +423,14 @@ int disable(String command)
 
 void cloudRegistration()
 {
-  latVarSuccess = Particle.variable("latitude", latString);
-  lonVarSuccess = Particle.variable("longitude", lonString);
-  alertVarSuccess = Particle.variable("sendAlert", alertInt);
-  ;
-  isDisabledVarSuccess = Particle.variable("disabled", disabled);
-  armedVarSuccess = Particle.variable("armed", armedInt);
-  //gpsFunSuccess = Particle.function("getCoords", getGPSData);
-  disableFunSuccess = Particle.function("disable", disable);
-  armFunSuccess = Particle.function("arm", arm);
-  alertFunSuccess = Particle.function("silence", silence);
+  bool latVarSuccess = Particle.variable("latitude", latString);
+  bool lonVarSuccess = Particle.variable("longitude", lonString);
+  bool alertVarSuccess = Particle.variable("sendAlert", alertInt);
+  bool isDisabledVarSuccess = Particle.variable("disabled", disabled);
+  bool armedVarSuccess = Particle.variable("armed", armedInt);
+  bool disableFunSuccess = Particle.function("disable", disable);
+  bool armFunSuccess = Particle.function("arm", arm);
+  bool alertFunSuccess = Particle.function("silence", silence);
   if (latVarSuccess == false || lonVarSuccess == false || alertVarSuccess == false || isDisabledVarSuccess == false ||
       armedVarSuccess == false || disableFunSuccess == false || armFunSuccess == false || alertFunSuccess == false)
   {
@@ -462,6 +440,9 @@ void cloudRegistration()
     Serial.println("Registration Successful.");
 }
 
+/*
+Function for debugging GPS data
+*/
 void printGPS()
 {
   Serial.print("Latitude (deg): ");

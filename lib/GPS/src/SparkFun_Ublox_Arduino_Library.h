@@ -1,3 +1,4 @@
+#pragma once
 /*
 	This is a library written for the u-blox ZED-F9P and NEO-M8P-2
 	SparkFun sells these at its website: www.sparkfun.com

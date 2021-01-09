@@ -1,3 +1,4 @@
+//line 800 change
 /*
 	This is a library written for the u-blox ZED-F9P and NEO-M8P-2
 	SparkFun sells these at its website: www.sparkfun.com
@@ -797,7 +798,8 @@ void SFE_UBLOX_GPS::processRTCM(uint8_t incoming)
 //a subset of bytes within a larger packet.
 void SFE_UBLOX_GPS::processUBX(uint8_t incoming, ubxPacket *incomingUBX, uint8_t requestedClass, uint8_t requestedID)
 {
-   size_t max_payload_size = (activePacketBuffer == SFE_UBLOX_PACKET_PACKETCFG) ? MAX_PAYLOAD_SIZE : 2;
+   //size_t max_payload_size = (activePacketBuffer == SFE_UBLOX_PACKET_PACKETCFG) ? MAX_PAYLOAD_SIZE : 2;
+   int max_payload_size = (activePacketBuffer == SFE_UBLOX_PACKET_PACKETCFG) ? MAX_PAYLOAD_SIZE : 2;
    bool overrun = false;
 
   //Add all incoming bytes to the rolling checksum
@@ -4233,12 +4235,12 @@ boolean SFE_UBLOX_GPS::getEsfDataInfo(uint16_t maxWait)
 
   //checkUblox();
 
-  uint32_t timeStamp = extractLong(0);
+  //uint32_t timeStamp = extractLong(0);
   uint32_t flags = extractInt(4);
 
-  uint8_t timeSent = flags & 0x03; // timeSent is 2-bit: 0 = none, 1 = on Ext0, 2 = on Ext1
-  uint8_t timeEdge = (flags & 0x04) >> 2;
-  uint8_t tagValid = (flags & 0x08) >> 3;
+  //uint8_t timeSent = flags & 0x03; // timeSent is 2-bit: 0 = none, 1 = on Ext0, 2 = on Ext1
+  //uint8_t timeEdge = (flags & 0x04) >> 2;
+  //uint8_t tagValid = (flags & 0x08) >> 3;
   uint8_t numMeas = (flags & 0xF800) >> 11;
 
   if (numMeas > DEF_NUM_SENS) // Truncate numMeas if required

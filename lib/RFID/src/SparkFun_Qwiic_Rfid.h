@@ -1,5 +1,4 @@
-#ifndef _SPARKFUN_QWIIC_RFID_H_
-#define _SPARKFUN_QWIIC_RFID_H_
+#pragma once
 
 #include <Wire.h>
 #include "application.h"
@@ -104,4 +103,4 @@ class Qwiic_Rfid
 
     TwoWire *_i2cPort;
 };
-#endif
+
