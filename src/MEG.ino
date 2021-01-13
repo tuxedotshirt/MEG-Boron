@@ -21,20 +21,20 @@ long previousMillis = 0;
 long interval = 300000; //5 minutes
 int disabled = 0;
 bool registrationComplete = false;
+String status = "";
 
 //GPS stuff
 String latString = "";
 String lonString = "";
-long latitude;  // = myGPS.getLatitude();
-long longitude; // = myGPS.getLongitude();
-int32_t spd;    // = myGPS.getGroundSpeed() / 278;
+long latitude = 0;
+long longitude = 0;
+int32_t spd;    
 long previousAwakeTime = 0;
 long currentAwakeTime = 0;
-long awakeDuration = 10000;
-int sleepDuration = 60;
-uint8_t fixType = 0; //0=no, 3=3D, 4=GNSS+Deadreckoning
-long GPSCheck = 0;
-long GPSStart = 0;
+long awakeDuration = 60000;
+int sleepDuration = 60000;
+//long GPSCheck = 0;
+//long GPSStart = 0;
 
 //RFID stuff
 #define RFID_ADDR 0x7D // Default I2C address
@@ -55,8 +55,9 @@ void setup() {
   Serial.begin(115200);
   Wire.begin();
 
-  //turn off charging LED
-  PMIC().disableCharging();
+  //turn off charging and charging LED
+  //PMIC().disableCharging();
+  setCharging(false);
 
   //power sense pin
   pinMode(D5, INPUT);
@@ -83,25 +84,17 @@ void setup() {
 void loop()
 {
   //turn on QWIIC FET
-  digitalWrite(D3, HIGH);
+  digitalWrite(D4, HIGH);
 
   
-  Serial.println("here");
+  //Serial.println("here");
   while ((currentAwakeTime - previousAwakeTime < awakeDuration) || on)
   {
     getGPSData();
     currentAwakeTime = millis();
-    if (digitalRead(D2) == HIGH)
-    {
-      on = true;
-      Serial.println("Vehicle On");
-    }
-    else
-    {
-      Serial.println("Vehicle Off ##################################");
-      on = false;
-    }
-
+    
+    switchDebug();
+    
     if (!on && !armed)
     {
       arm("arm");
@@ -128,14 +121,17 @@ void loop()
     {
       Serial.println("Vehicle disabled");
     }
+    status= "";
+    status = String::format("%2.8f,%3.8f,%d,%d,%d", (latitude / 10000000.0), (longitude / 10000000.0), alertInt, disabled, armedInt);
   }
+  
   if (!on && !stolen)
   {
 
     arm("arm");
 
     digitalWrite(D4, LOW);
-
+    
     SystemSleepConfiguration config;
     config.mode(SystemSleepMode::STOP)
       .gpio(D5, RISING)
@@ -143,23 +139,35 @@ void loop()
       .network(NETWORK_INTERFACE_CELLULAR);
     SystemSleepResult sleepResult = System.sleep(config);
     
-    //if the app wakes electron up, stay awake for 30s to communicate
+    //if the app wakes electron up, stay awake for 60s to communicate
     if (sleepResult.wakeupReason() == SystemSleepWakeupReason::BY_NETWORK) {
     // Waken by network activity 
-      awakeDuration = 30000;
+      Particle.publish("status", status, PRIVATE);
+      awakeDuration = 60000;
     }
     else
     {
       awakeDuration = 10000;
-      sleepDuration = 60;
+      //sleepDuration = 60000;
     }
     previousAwakeTime = millis();
     currentAwakeTime = millis();
+    
   }
+  
 }
 
-void sleep(){
-
+void switchDebug(){
+  if (digitalRead(D2) == HIGH)
+    {
+      on = true;
+      Serial.println("Vehicle On");
+    }
+    else
+    {
+      Serial.println("Vehicle Off ##################################");
+      on = false;
+    }
 }
 
 void stolenAlert(bool send)
@@ -256,24 +264,19 @@ void sentry()
 void getGPSData()
 {
   Serial.println("Getting location................................");
-  fixType = myGPS.getFixType();
-  if (fixType == 0)
+  // fixType 0=no, 3=3D, 4=GNSS+Deadreckoning
+  if (myGPS.getFixType() == 0)
     awakeDuration = 35000;
 
   latitude = myGPS.getLatitude();
-
   longitude = myGPS.getLongitude();
-
   spd = myGPS.getGroundSpeed() / 278;
 
   latString = "";
   lonString = "";
 
   latString += String(latitude / 10000000.0);
-  Serial.println(latitude / 10000000.0);
   lonString += String(longitude / 10000000.0);
-  Serial.println(longitude / 10000000.0);
-  //delay(1000);
 }
 
 void startRFID()
@@ -403,11 +406,14 @@ void cloudRegistration()
   bool alertVarSuccess = Particle.variable("sendAlert", alertInt);
   bool isDisabledVarSuccess = Particle.variable("disabled", disabled);
   bool armedVarSuccess = Particle.variable("armed", armedInt);
+  bool armedBoolVarSuccess = Particle.variable("armedBool", armed);
   bool disableFunSuccess = Particle.function("disable", disable);
   bool armFunSuccess = Particle.function("arm", arm);
   bool alertFunSuccess = Particle.function("silence", silence);
+  Particle.variable("status", status);
   if (latVarSuccess == false || lonVarSuccess == false || alertVarSuccess == false || isDisabledVarSuccess == false ||
-      armedVarSuccess == false || disableFunSuccess == false || armFunSuccess == false || alertFunSuccess == false)
+      armedVarSuccess == false || disableFunSuccess == false || armFunSuccess == false || alertFunSuccess == false ||
+      armedBoolVarSuccess == false)
   {
     Serial.println("Failed registration.");
   }
@@ -416,7 +422,7 @@ void cloudRegistration()
 }
 
 /*
-Function for debugging GPS data
+Function for debugging GPS data, prints to console
 */
 void printGPS()
 {
@@ -427,4 +433,45 @@ void printGPS()
   Serial.print("Speed: ");
   Serial.print(spd);
   Serial.println(" km/h");
+}
+
+void setCharging(bool enable) {
+
+	PMIC pmic;
+
+	// DisableCharging turns of charging. DisableBATFET completely disconnects the battery.
+	if (enable) {
+		pmic.enableCharging();
+		pmic.enableBATFET();
+	}
+	else {
+		pmic.disableCharging();
+		pmic.disableBATFET();
+	}
+
+	// Disabling the watchdog is necessary, otherwise it will kick in and turn
+	// charing at random times, even when sleeping.
+
+	// This disables both the watchdog and the charge safety timer in
+	// Charge Termination/Timer Control Register REG05
+	// pmic.disableWatchdog() disables the watchdog, but doesn't disable the
+	// charge safety timer, so the red LED will start blinking slowly after
+	// 1 hour if you don't do both.
+	byte DATA = pmic.readChargeTermRegister();
+
+	if (enable) {
+		DATA |= 0b00111000;
+	}
+	else {
+		// 0b11001110 = disable watchdog
+		// 0b11000110 = disable watchdog and charge safety timer
+		DATA &= 0b11000110;
+	}
+
+	// This would be easier if pmic.writeRegister wasn't private (or disable
+	// charge safety timer had an exposed method
+	Wire1.beginTransmission(PMIC_ADDRESS);
+	Wire1.write(CHARGE_TIMER_CONTROL_REGISTER);
+	Wire1.write(DATA);
+	Wire1.endTransmission(true);
 }
